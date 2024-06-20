@@ -46,7 +46,6 @@ router.use(
 )
 
 router.post('/heygen-video', async (req, res) => {
-  console.log(req.body, 'req.body')
   const { event_type, event_data }: CreateVideoT = req.body
 
   try {
@@ -57,10 +56,9 @@ router.post('/heygen-video', async (req, res) => {
 
       if (!videoData) throw new Error('Video not found')
       const { chat_id } = videoData
-      console.log(chat_id, 'chat_id')
 
       const response = await fetch(videoUrl)
-      console.log(response, 'response')
+
       if (!response.ok) {
         throw new Error(`Failed to fetch video: ${response.statusText}`)
       }
@@ -69,30 +67,24 @@ router.post('/heygen-video', async (req, res) => {
       const tempDir = path.join(process.cwd(), 'temp')
       const inputFilePath = path.join(tempDir, `${video_id}.mp4`)
       const outputFilePath = path.join(tempDir, `${video_id}_circular.mp4`)
-      console.log(inputFilePath, 'inputFilePath')
-      console.log(outputFilePath, 'outputFilePath')
 
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir)
       }
 
       fs.writeFileSync(inputFilePath, videoBuffer)
-      console.log('Video saved to', inputFilePath)
 
       const croppedVideoPath = await cropSquareAroundHead(
         inputFilePath,
         outputFilePath
       )
-      console.log(croppedVideoPath, 'croppedVideoPath')
 
       const fileBuffer = fs.readFileSync(croppedVideoPath)
-      console.log(fileBuffer, 'fileBuffer')
+
       const inputFile = new InputFile(
         fileBuffer,
         path.basename(croppedVideoPath)
       )
-      console.log(inputFile, 'inputFile')
-      console.log(chat_id, 'chat_id')
 
       await botAiKoshey.api.sendVideoNote(chat_id, inputFile)
       return res.status(200).json({ message: 'ok' })
